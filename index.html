@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>ОДС Харькова</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <script src="js/angular.min.js" type="text/javascript"></script>
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <script>
+     
+        var app = angular.module( 'app', [ ] )
+          .controller('contactbookCtrl', function( $scope,$http ){
+            $scope.currentPersonId = -1;
+            
+                $http.get("ajax.php")
+                     .then(
+                    function(response){
+                        $scope.contactbook = response.data;
+                      console.log(data);  
+                    },
+                    function(response){
+
+                    }
+                );
+            $scope.addNewPerson = function() {
+              if ( $scope.area != '' ) {
+                $scope.contactbook.push({
+                  area: $scope.area,
+                  street: $scope.street,
+                  dom: $scope.dom,
+                  tel: $scope.tel
+                });
+            
+                $http.post('insert.php', {
+                  area: $scope.area,
+                  street: $scope.street,
+                  dom: $scope.dom,
+                  tel: $scope.tel
+                },true)
+                .then(
+                    function(data){
+                      console.log(data);  
+                    },
+                    function(response){
+
+                    }
+                );
+                // .success(function(data, status, headers, config) {
+                //     console.log(data);
+                // });
+                // error(function(data, status, headers, config) {
+                //     alert( "None: " + JSON.stringify({data: data}));
+                // });
+
+                $scope.area = '';
+                $scope.street = '';
+                $scope.dom = '';
+                $scope.tel = '';
+              }
+              else{
+                alert("No data");
+              }
+            }
+            $scope.savePerson = function() {
+              if( $scope.currentPersonId > -1 ){
+                var id = $scope.currentPersonId;
+                $scope.contactbook[id].area = $scope.area;
+                $scope.contactbook[id].street = $scope.street;
+                $scope.contactbook[id].dom = $scope.dom;
+                $scope.contactbook[id].tel = $scope.tel;
+                $scope.area = '';
+                $scope.street = '';
+                $scope.dom = '';
+                $scope.tel = '';
+                $scope.currentPersonId = -1;
+              }
+            }
+            $scope.editPerson = function ( id ) {
+              $scope.currentPersonId = id;
+              $scope.area = $scope.contactbook[id].area;
+              $scope.street = $scope.contactbook[id].street;
+              $scope.dom = $scope.contactbook[id].dom;
+              $scope.tel = $scope.contactbook[id].tel;
+            }
+            $scope.deletePerson = function( id ) {
+                var pass = prompt("Введите пароль удаления");
+                if(pass==="fttbnks@mail.ru"){
+                    $scope.contactbook.splice( id, 1 );
+                }
+                else {
+                    alert("Удалить запись может только администратор!!!");
+                } 
+            }
+          })
+
+    </script>
+  </head>
+  <body>
+  
+    <div class="container-fluide">
+      <div ng-app="app" ng-controller="contactbookCtrl">
+        <h1>Список диспетчерских служб(ОДС) города Харьков.</h1>
+        <form>
+            <div class="row" id="value">
+                <div class="col-md-3 col-sm-6">
+                    <label class="data">Район</label>
+                    <input type="text" size="26" ng-model="area" placeholder="Шевченковский" />
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label class="data">Улица</label>
+                    <input type="text" size="26" ng-model="street" placeholder="проспект Победы" />
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label class="data">№ дома</label>
+                    <input type="text" size="26" ng-model="dom" placeholder="50а" />
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label class="data">Телефон</label>
+                    <input type="text" size="26" ng-model="tel" placeholder="(057)775-25-45" />
+                </div>
+            </div>    
+            <div class="row start">
+                <div class="col-md-12">
+                    <button class="btn btn-success center btn-lg" ng-click="addNewPerson()" ng-hide="currentPersonId > -1">Добавить</button>
+                    <button class="btn btn-warning center btn-lg" ng-click="savePerson()" ng-show="currentPersonId > -1">Сохранить</button>
+                </div>
+            </div>
+        </form>
+        <div class="table-responsive"> 
+        <table id="contactbook" class="table-hover">
+        <thead>
+            <tr class="mainitem">
+                <th>№</th>
+                <th>Район</th>
+                <th>Улица</th>
+                <th>№ дома</th>
+                <th>Телефон</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="contact in contactbook" class="item">
+                <td>{{ $index + 1 }}</td>
+                <td>{{ contact.area }}</td>
+                <td>{{ contact.street }}</td>
+                <td>{{ contact.dom }}</td>
+                <td>{{ contact.tel }}</td>
+                <td>
+                        <button class="btn btn-success" ng-click="editPerson($index)">ред-ть</button>
+                        <button class="btn btn-danger" ng-click="deletePerson($index)">удалить</button>
+                </td>
+            </tr>
+        </tbody>
+        </table>
+        </div>
+</div>
+      
+        
+    </div><!--container-->
+    
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.8.2.min.js" type="text/javascript"></script>
+    
+    
+  </body>
+</html>
